@@ -1,4 +1,4 @@
-module wispy-frost-8345
+module github.com/HumamAlhusaini/syumia-workers-turso-integration/tree/net/http
 
 go 1.22.2
 
