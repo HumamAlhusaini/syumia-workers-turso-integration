@@ -1,48 +1,64 @@
+// main.go
 package main
 
 import (
 	"bytes"
+	"encoding/json"
 	"fmt"
 	"io"
-	"log"
 	"net/http"
 
 	"github.com/syumai/workers"
 )
 
 func main() {
-	url := "https://example.turso.io/v2/pipeline"
-	authToken := "TOKEN"
+	url := "https://my-db-humamalhusaini.turso.io/v2/pipeline"
+	authToken := "eyJhbGciOiJFZERTQSIsInR5cCI6IkpXVCJ9.eyJpYXQiOjE3MzEyNzcwODUsImlkIjoiNzMwZDZiZDAtYzlmNS00MjFkLWE5MTQtNGNmYjZkOTlhNjU0In0.zkSvvLcXOAgvRNqJrY-Bi8bZjynZiMF3EHhKSpwIWeNWznhlR17mmSWsKNZLaCw_3wvuYOYqXSBYOJrPd248DQ"
 
-	// Define the request body
-	jsonData := []byte(`{"requests":[{"type":"execute", "stmt": { "sql": "SELECT 1" }}, {"type": "close"}]}`)
-
-	// Create a new POST request
-	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
-	if err != nil {
-		log.Fatalf("Error creating request: %v", err)
+	// Define the request payload
+	payload := map[string]interface{}{
+		"requests": []map[string]interface{}{
+			{"type": "execute", "stmt": map[string]string{"sql": "SELECT 1"}},
+			{"type": "close"},
+		},
 	}
 
-	// Add headers
-	req.Header.Set("Content-Type", "application/json")
-	req.Header.Set("Authorization", "Bearer "+authToken)
+	// Encode payload to JSON
+	payloadBytes, err := json.Marshal(payload)
+	if err != nil {
+		fmt.Println("Error encoding JSON:", err)
+		return
+	}
 
-	// Make the HTTP request
+	// Create the HTTP request
+	req, err := http.NewRequest("POST", url, bytes.NewBuffer(payloadBytes))
+	if err != nil {
+		fmt.Println("Error creating request:", err)
+		return
+	}
+
+	// Set headers
+	req.Header.Set("Authorization", "Bearer "+authToken)
+	req.Header.Set("Content-Type", "application/json")
+
+	// Send the request
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		log.Fatalf("Error making request: %v", err)
+		fmt.Println("Error sending request:", err)
+		return
 	}
 	defer resp.Body.Close()
 
 	// Read the response
 	body, err := io.ReadAll(resp.Body)
 	if err != nil {
-		log.Fatalf("Error reading response: %v", err)
+		fmt.Println("Error reading response:", err)
+		return
 	}
 
-	// Print the response
-	fmt.Println("Response:", string(body))
+	fmt.Println("Response Status:", resp.Status)
+	fmt.Println("Response Body:", string(body))
 
 	workers.Serve(nil)
 }
