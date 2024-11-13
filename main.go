@@ -13,15 +13,13 @@ import (
 
 func main() {
 	http.HandleFunc("/fetchData", fetchDataHandler)
-	log.Println("Server started on :8787")
-	log.Fatal(http.ListenAndServe(":8787", nil))
 
 	workers.Serve(nil)
 }
 
 func fetchDataHandler(w http.ResponseWriter, r *http.Request) {
 	// Define the URL and authorization token
-	url := "https://URL.turso.io/v2/pipeline"
+	url := "https://URL"
 	authToken := "TOKEN"
 
 	// Create the request body as a map
@@ -35,14 +33,17 @@ func fetchDataHandler(w http.ResponseWriter, r *http.Request) {
 	// Marshal the body into JSON
 	jsonData, err := json.Marshal(requestBody)
 	if err != nil {
-		http.Error(w, "Failed to marshal JSON", http.StatusInternalServerError)
-		return
+		http.Error(w, "Failed to marshal JSON"+err.Error(), http.StatusInternalServerError)
 	}
+
+	// Print the JSON data
+	log.Println("This is the JSON Data" + string(jsonData))
+	log.Println()
 
 	// Create a new POST request
 	req, err := http.NewRequest("POST", url, bytes.NewBuffer(jsonData))
 	if err != nil {
-		http.Error(w, "Failed to create request", http.StatusInternalServerError)
+		http.Error(w, "Failed to create request: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 
@@ -50,11 +51,19 @@ func fetchDataHandler(w http.ResponseWriter, r *http.Request) {
 	req.Header.Set("Authorization", "Bearer "+authToken)
 	req.Header.Set("Content-Type", "application/json")
 
+	// print the request
+	log.Println("This is the request", req)
+	log.Println()
+
+	// print request header
+	log.Println("This is the header", req.Header)
+	log.Println()
+
 	// Initialize the HTTP client and send the request
 	client := &http.Client{}
 	resp, err := client.Do(req)
 	if err != nil {
-		http.Error(w, "Failed to make request", http.StatusInternalServerError)
+		http.Error(w, "Failed to make request: "+err.Error(), http.StatusInternalServerError)
 		return
 	}
 	defer resp.Body.Close()
